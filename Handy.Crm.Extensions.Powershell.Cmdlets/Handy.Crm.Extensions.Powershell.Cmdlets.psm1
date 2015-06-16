@@ -79,7 +79,7 @@ Function Get-CRMSolution
     $fetchXml = @"
 <fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="true" count="1">
   <entity name="solution">
-	<all-attributes />
+    <all-attributes />
     <filter type="and">
       <condition attribute="uniquename" operator="eq" value="{0}" />
     </filter>
@@ -119,7 +119,7 @@ Function Set-CRMSDKStepState
     $fetchXml = @"
 <fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">
   <entity name="sdkmessageprocessingstep">
-	<all-attributes />
+    <all-attributes />
     <filter type="and">
       <condition attribute="solutionid" operator="eq" value="{0}" />
       {1}
@@ -159,12 +159,12 @@ Function Set-CRMSDKStepState
     {
         'Enabled'
         {
-            $response = Set-CRMState -Connection $Connection -Entities $steps -State 0 -Status 1
+            $response = Set-CRMState -Connection $Connection -Entity $steps -State 0 -Status 1
         }
 
         'Disabled'
         {
-            $response = Set-CRMState -Connection $Connection -Entities $steps -State 1 -Status 2
+            $response = Set-CRMState -Connection $Connection -Entity $steps -State 1 -Status 2
         }
     }
 
@@ -186,7 +186,7 @@ Function Get-CRMBusinessUnit
     $fetchXml = @"
 <fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="true">
   <entity name="businessunit">
-	<all-attributes />
+    <all-attributes />
     <filter type="and">
       <condition attribute="name" operator="eq" value="{0}"/>
     </filter>
@@ -222,7 +222,7 @@ Function New-CRMBusinessUnit
         $fetchXml = @"
 <fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="true" count="1">
   <entity name="businessunit">
-	<all-attributes />
+    <all-attributes />
     <filter type="and">
       <condition attribute="parentbusinessunitid" operator="null" />
     </filter>
@@ -230,7 +230,7 @@ Function New-CRMBusinessUnit
 </fetch>
 "@
 
-        $bu = (Get-CRMEntity -Connection $Connection -FetchXml $fetchXml) | Select-Object -Index 0
+        $bu = Get-CRMEntity -Connection $Connection -FetchXml $fetchXml | Select-Object -Index 0
         $ParentBusinessUnitId = $bu.Id
     }
 
@@ -238,7 +238,7 @@ Function New-CRMBusinessUnit
     $buAttributes['name'] = $Name
     $buAttributes['parentbusinessunitid'] = Get-CRMEntityReference -EntityName 'businessunit' -Id $ParentBusinessUnitId
     
-    $resp = New-CRMEntity -Connection $Connection -EntityName 'businessunit' -Attributes $buAttributes
+    $resp = New-CRMEntity -Connection $Connection -EntityName 'businessunit' -Attributes $buAttributes -ReturnResponses
 
     $resp
 }
@@ -302,7 +302,7 @@ Function Get-CRMDuplicateRule
     $fetchXml = @"
 <fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="true">
   <entity name="duplicaterule">
-	<all-attributes />
+    <all-attributes />
     <filter type="and">
       <condition attribute="name" operator="eq" value="{0}" />
       <condition attribute="statecode" operator="eq" value="{1}" />
@@ -312,7 +312,7 @@ Function Get-CRMDuplicateRule
 </fetch>
 "@
 
-    $duplicateRule = Get-CRMEntity -Connection $Connection -FetchXml ([string]::Format($fetchXml, $Name, $StateCode, $StatusCode))
+    $duplicateRule = Get-CRMEntity -Connection $Connection -FetchXml ([string]::Format($fetchXml, $Name, $StateCode, $StatusCode)) | Select-Object -Index 0
 
     $duplicateRule
 }
@@ -320,6 +320,7 @@ Function Get-CRMDuplicateRule
 Function New-CRMQueue
 {
     [CmdletBinding()]
+    [OutputType([Microsoft.Xrm.Sdk.Entity])]
     Param(
         [Parameter(Mandatory=$true)]
         [Microsoft.Xrm.Client.CrmConnection]$Connection,
@@ -347,19 +348,20 @@ Function New-CRMQueue
         $queueAttributes['emailaddress'] = $Email
     }
 
-    $resp = New-CRMEntity -Connection $Connection -EntityName 'queue' -Attributes $queueAttributes
+    # TODO Add returnresponse
+    $resp = New-CRMEntity -Connection $Connection -EntityName 'queue' -Attributes $queueAttributes -ReturnResponses
 
     $queueEntity = Get-CRMEntityById -Connection $Connection -EntityName 'queue' -Id $resp.Responses[0].Response.Results['id'] -AllColumns
 
     if ($Email -ne [string]::Empty)
     {
         $queueEntity['emailrouteraccessapproval'] = Get-CRMOptionSetValue -Value 1 # Approved
-        Update-CRMEntity -Connection $Connection -Entities $queueEntity
+        Update-CRMEntity -Connection $Connection -Entity $queueEntity
     }
 
     $queueEntity = Get-CRMEntityById -Connection $Connection -EntityName 'queue' -Id $resp.Responses[0].Response.Results['id'] -AllColumns
 
-    return $queueEntity
+    $queueEntity
 }
 
 Function Set-CRMQueueForUser
@@ -382,7 +384,9 @@ Function Set-CRMQueueForUser
 
     $userEntity['queueid'] = Get-CRMEntityReference -EntityName 'queue' -Id $QueueId
 
-    Update-CRMEntity -Connection $Connection -Entity $userEntity
+    $r = Update-CRMEntity -Connection $Connection -Entity $userEntity
+
+    $r
 }
 
 
@@ -405,7 +409,7 @@ Function Add-CRMRoleForUser
     $fetchXml = @"
 <fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="true" count="1">
   <entity name="role">
-	<all-attributes />
+    <all-attributes />
     <filter type="and">
       <condition attribute="name" operator="eq" value="{0}" />
       <condition attribute="businessunitid" operator="eq" value="{1}" />
@@ -416,7 +420,7 @@ Function Add-CRMRoleForUser
 
     $role = Get-CRMEntity -Connection $Connection -FetchXml ([string]::Format($fetchXml, $RoleName, $User['businessunitid'].Id)) | Select-Object -Index 0
 
-    if ($roles -eq $null)
+    if ($role -eq $null)
     {
         throw "Couldn't find role $($RoleName) or something went wrong."
     }
@@ -445,7 +449,7 @@ Function Remove-CRMRoleForUser
     $fetchXml = @"
 <fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="true" count="1">
   <entity name="role">
-	<all-attributes />
+    <all-attributes />
     <filter type="and">
       <condition attribute="name" operator="eq" value="{0}" />
       <condition attribute="businessunitid" operator="eq" value="{1}" />
@@ -454,7 +458,7 @@ Function Remove-CRMRoleForUser
 </fetch>
 "@
 
-    $role = Get-CRMEntities -Connection $Connection -FetchXml ([string]::Format($fetchXml, $RoleName, $User['businessunitid'].Id)) | Select-Object -Index 0
+    $role = Get-CRMEntity -Connection $Connection -FetchXml ([string]::Format($fetchXml, $RoleName, $User['businessunitid'].Id)) | Select-Object -Index 0
 
     if ($role -eq $null)
     {
@@ -468,7 +472,7 @@ Function Remove-CRMRoleForUser
 
 
 Add-Type -TypeDefinition @"
-    public enum CurrencyEnum
+    public enum CurrencyCodeEnum
     {
         CHF,
         EUR,
@@ -478,6 +482,34 @@ Add-Type -TypeDefinition @"
     }
 "@
 
+Function Get-CRMTransactionCurrency
+{
+    [CmdletBinding()]
+    [OutputType([Microsoft.Xrm.Sdk.Entity])]
+    Param(
+        [Parameter(Mandatory=$true)]
+        [Microsoft.Xrm.Client.CrmConnection]$Connection,
+
+        [Parameter(Mandatory=$true)]
+        [CurrencyCodeEnum]$CurrencyCode
+    )
+
+    $fetchXml = @"
+<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="true" count="1">
+  <entity name="transactioncurrency">
+    <all-attributes />
+    <filter type="and">
+      <condition attribute="isocurrencycode" operator="eq" value="{0}" />
+    </filter>
+  </entity>
+</fetch>
+"@
+
+    $tc = Get-CRMEntity -Connection $Connection -FetchXml ([string]::Format($fetchXml, $CurrencyCode)) | Select-Object -Index 0
+
+    $tc
+}
+
 Function New-CRMTransactionCurrency
 {
     [CmdletBinding()]
@@ -486,7 +518,7 @@ Function New-CRMTransactionCurrency
         [Microsoft.Xrm.Client.CrmConnection]$Connection,
 
         [Parameter(Mandatory=$true)]
-        [CurrencyEnum]$Currency,
+        [CurrencyCodeEnum]$CurrencyCode,
 
         [Parameter(Mandatory=$false)]
         [ValidateNotNullOrEmpty()]
@@ -497,39 +529,39 @@ Function New-CRMTransactionCurrency
     $currencyAttributes = @{}
     $currencyAttributes['currencyprecision'] = 2
     $currencyAttributes['exchangerate'] = [decimal]1.0
-    $currencyAttributes['isocurrencycode'] = [string]$Currency
+    $currencyAttributes['isocurrencycode'] = [string]$CurrencyCode
 
-    switch ($Currency)
+    switch ($CurrencyCode)
     {
-        ([CurrencyEnum]::CHF -as [string])
+        ([CurrencyCodeEnum]::CHF -as [string])
         {
             $currencyAttributes['currencyname'] = 'Swiss franc'
             $currencyAttributes['currencysymbol'] = 'Fr.'
             break
         }
 
-        ([CurrencyEnum]::EUR -as [string])
+        ([CurrencyCodeEnum]::EUR -as [string])
         {
             $currencyAttributes['currencyname'] = 'Euro'
             $currencyAttributes['currencysymbol'] = '€'
             break
         }
 
-        ([CurrencyEnum]::GBP  -as [string])
+        ([CurrencyCodeEnum]::GBP  -as [string])
         {
             $currencyAttributes['currencyname'] = 'Pound Sterling'
             $currencyAttributes['currencysymbol'] = '£'
             break
         }
 
-        ([CurrencyEnum]::RUB -as [string])
+        ([CurrencyCodeEnum]::RUB -as [string])
         {
             $currencyAttributes['currencyname'] = 'Russian ruble'
             $currencyAttributes['currencysymbol'] = 'р.'
             break
         }
 
-        ([CurrencyEnum]::USD -as [string])
+        ([CurrencyCodeEnum]::USD -as [string])
         {
             $currencyAttributes['currencyname'] = 'US Dollar'
             $currencyAttributes['currencysymbol'] = '$'
