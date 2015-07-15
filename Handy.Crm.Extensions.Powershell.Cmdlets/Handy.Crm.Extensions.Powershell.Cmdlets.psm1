@@ -87,7 +87,7 @@ Function Get-CRMSolution
 </fetch>
 "@
 
-    $solution = Get-CRMEntity -Connection $Connection -FetchXml ([string]::Format($fetchXml, $Name))
+    $solution = Get-CRMEntity -Connection $Connection -FetchXml ([string]::Format($fetchXml, $Name)) | Select-Object -Index 0
     $solution
 }
 
@@ -203,6 +203,7 @@ Function Get-CRMBusinessUnit
 Function New-CRMBusinessUnit
 {
     [CmdletBinding()]
+    [OutputType([System.Guid])]
     Param(
         [Parameter(Mandatory=$true)]
         [Microsoft.Xrm.Client.CrmConnection]$Connection,
@@ -240,13 +241,14 @@ Function New-CRMBusinessUnit
     
     $resp = New-CRMEntity -Connection $Connection -EntityName 'businessunit' -Attributes $buAttributes -ReturnResponses
 
-    $resp
+    $resp.Responses[0].Response.id
 }
 
 
 Function New-CRMUser
 {
     [CmdletBinding()]
+    [OutputType([System.Guid])]
     Param(
         [Parameter(Mandatory=$true)]
         [Microsoft.Xrm.Client.CrmConnection]$Connection,
@@ -274,15 +276,16 @@ Function New-CRMUser
     $userAttributes['fullname'] = "$($FirstName) $($LastName)"
     $userAttributes['businessunitid'] = Get-CRMEntityReference -EntityName 'businessunit' -Id $BusinessUnitId
 
-    $resp = New-CRMEntity -Connection $Connection -EntityName 'systemuser' -Attributes $userAttributes
+    $resp = New-CRMEntity -Connection $Connection -EntityName 'systemuser' -Attributes $userAttributes -ReturnResponses
 
-    return $resp
+    $resp.Responses[0].Response.id
 }
 
 
 Function Get-CRMDuplicateRule
 {
     [CmdletBinding()]
+    [OutputType([Microsoft.Xrm.Sdk.Entity])]
     Param(
         [Parameter(Mandatory=$true)]
         [Microsoft.Xrm.Client.CrmConnection]$Connection,
@@ -320,7 +323,7 @@ Function Get-CRMDuplicateRule
 Function New-CRMQueue
 {
     [CmdletBinding()]
-    [OutputType([Microsoft.Xrm.Sdk.Entity])]
+    [OutputType([System.Guid])]
     Param(
         [Parameter(Mandatory=$true)]
         [Microsoft.Xrm.Client.CrmConnection]$Connection,
@@ -351,17 +354,16 @@ Function New-CRMQueue
     # TODO Add returnresponse
     $resp = New-CRMEntity -Connection $Connection -EntityName 'queue' -Attributes $queueAttributes -ReturnResponses
 
-    $queueEntity = Get-CRMEntityById -Connection $Connection -EntityName 'queue' -Id $resp.Responses[0].Response.Results['id'] -AllColumns
+    $queueId = $resp.Responses[0].Response.id
 
     if ($Email -ne [string]::Empty)
     {
+        $queueEntity = Get-CRMEntityById -Connection $Connection -EntityName 'queue' -Id $queueId -Colummns 'emailrouteraccessapproval'
         $queueEntity['emailrouteraccessapproval'] = Get-CRMOptionSetValue -Value 1 # Approved
-        Update-CRMEntity -Connection $Connection -Entity $queueEntity
+        $resp = Update-CRMEntity -Connection $Connection -Entity $queueEntity
     }
 
-    $queueEntity = Get-CRMEntityById -Connection $Connection -EntityName 'queue' -Id $resp.Responses[0].Response.Results['id'] -AllColumns
-
-    $queueEntity
+    $queueId
 }
 
 Function Set-CRMQueueForUser
@@ -384,9 +386,9 @@ Function Set-CRMQueueForUser
 
     $userEntity['queueid'] = Get-CRMEntityReference -EntityName 'queue' -Id $QueueId
 
-    $r = Update-CRMEntity -Connection $Connection -Entity $userEntity
+    $resp = Update-CRMEntity -Connection $Connection -Entity $userEntity -ReturnResponses
 
-    $r
+    $resp
 }
 
 
@@ -513,6 +515,7 @@ Function Get-CRMTransactionCurrency
 Function New-CRMTransactionCurrency
 {
     [CmdletBinding()]
+    [OutputType([System.Guid])]
     Param(
         [Parameter(Mandatory=$true)]
         [Microsoft.Xrm.Client.CrmConnection]$Connection,
@@ -576,8 +579,9 @@ Function New-CRMTransactionCurrency
 
     Merge-CRMAttributes -From $AdditionAttributes -To $currencyAttributes
 
-    $resp = New-CRMEntity -Connection $Connection -EntityName 'transactioncurrency' -Attributes $currencyAttributes
-    $resp
+    $resp = New-CRMEntity -Connection $Connection -EntityName 'transactioncurrency' -Attributes $currencyAttributes -ReturnResponses
+
+    $resp.Responses[0].Response.id
 }
 
 Function Set-CRMSDKStepMode
