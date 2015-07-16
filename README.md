@@ -14,6 +14,7 @@ Handy.Crm.Extensions.Powershell.Cmdlets - is a set of cmdlets for PowerShell ext
 * Get-CRMEntityReference
 * Get-CRMOptionSetValue
 * Get-CRMSolution
+* Get-CRMTransactionCurrency
 * Merge-CRMAttributes
 * New-CRMBusinessUnit
 * New-CRMQueue

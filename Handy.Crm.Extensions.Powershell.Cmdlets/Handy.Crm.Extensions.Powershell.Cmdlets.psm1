@@ -1,6 +1,40 @@
 ﻿Set-StrictMode -Version Latest
 
 
+Function Assert-CRMOrganizationResponse
+{
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory=$true,
+            ValueFromPipeline=$true)]
+        [Microsoft.Xrm.Sdk.Messages.ExecuteMultipleResponse]$Response
+    )
+
+    Begin {}
+    Process
+    {
+        if ($Response.IsFaulted -eq $true)
+        {
+            Write-Verbose "ExecuteMultiple finished with faults"
+
+            $message = "ExecuteMultpleResponse finished with fault."
+            foreach ($r in $Response.Responses)
+            {
+                if ($r.Fault -ne $null)
+                {
+                    $message += "`r`n$($r.RequestIndex): $($r.Fault.Message)"
+                }
+            }
+            throw $message
+        } else
+        {
+            Write-Verbose "ExecuteMultiple finished without faults"
+        }
+    }
+    End {}
+}
+
+
 Function Get-CRMOptionSetValue
 {
     [CmdletBinding()]
@@ -101,7 +135,7 @@ Function Set-CRMSDKStepState
 
         [Parameter(Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [Microsoft.Xrm.Sdk.Entity]$Solution,
+        [guid]$SolutionId,
 
         [Parameter(Mandatory=$true)]
         [ValidateSet('Enabled', 'Disabled')]
@@ -148,12 +182,18 @@ Function Set-CRMSDKStepState
     }
 
     Write-Verbose "FetchXML:"
-    Write-Verbose "$([string]::Format($fetchXml, $solution.Id, $includeCondition, $excludeCondition))"
+    Write-Verbose "$([string]::Format($fetchXml, $SolutionId, $includeCondition, $excludeCondition))"
 
-    $steps = Get-CRMEntity -Connection $Connection -FetchXml ([string]::Format($fetchXml, $Solution.Id, $includeCondition, $excludeCondition))
+    $steps = Get-CRMEntity -Connection $Connection -FetchXml ([string]::Format($fetchXml, $SolutionId, $includeCondition, $excludeCondition))
+
+    if (($steps -eq $null) -or ($steps.Count -eq 0))
+    {
+        Write-Warning "Found nothing to update"
+        return
+    }
 
     Write-Verbose "Found $($steps.Count) steps"
-    Write-Verbose "Enabling them"
+    Write-Verbose "Updating them"
 
     switch ($State)
     {
@@ -168,7 +208,7 @@ Function Set-CRMSDKStepState
         }
     }
 
-    $response
+    $response | Assert-CRMOrganizationResponse
 }
 
 
@@ -266,7 +306,11 @@ Function New-CRMUser
         [string]$LastName,
 
         [Parameter(Mandatory=$true)]
-        [guid]$BusinessUnitId
+        [guid]$BusinessUnitId,
+
+        [Parameter(Mandatory=$false)]
+        [ValidateNotNullOrEmpty()]
+        [hashtable]$AdditionAttributes = @{}
     )
 
     $userAttributes = @{}
@@ -275,6 +319,8 @@ Function New-CRMUser
     $userAttributes['lastname'] = $LastName
     $userAttributes['fullname'] = "$($FirstName) $($LastName)"
     $userAttributes['businessunitid'] = Get-CRMEntityReference -EntityName 'businessunit' -Id $BusinessUnitId
+
+    Merge-CRMAttributes -From $AdditionAttributes -To $userAttributes
 
     $resp = New-CRMEntity -Connection $Connection -EntityName 'systemuser' -Attributes $userAttributes -ReturnResponses
 
@@ -361,6 +407,7 @@ Function New-CRMQueue
         $queueEntity = Get-CRMEntityById -Connection $Connection -EntityName 'queue' -Id $queueId -Colummns 'emailrouteraccessapproval'
         $queueEntity['emailrouteraccessapproval'] = Get-CRMOptionSetValue -Value 1 # Approved
         $resp = Update-CRMEntity -Connection $Connection -Entity $queueEntity
+        $resp | Assert-CRMOrganizationResponse
     }
 
     $queueId
@@ -388,7 +435,7 @@ Function Set-CRMQueueForUser
 
     $resp = Update-CRMEntity -Connection $Connection -Entity $userEntity -ReturnResponses
 
-    $resp
+    $resp | Assert-CRMOrganizationResponse
 }
 
 
@@ -623,5 +670,5 @@ Function Set-CRMSDKStepMode
     }
 
     $resp = Update-CRMEntity -Connection $Connection -Entity $step
-    $resp
+    $resp | Assert-CRMOrganizationResponse
 }
