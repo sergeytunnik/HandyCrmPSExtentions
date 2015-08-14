@@ -281,6 +281,8 @@ Function New-CRMBusinessUnit
     
     $resp = New-CRMEntity -Connection $Connection -EntityName 'businessunit' -Attributes $buAttributes -ReturnResponses
 
+    $resp | Assert-CRMOrganizationResponse
+
     $resp.Responses[0].Response.id
 }
 
@@ -323,6 +325,8 @@ Function New-CRMUser
     Merge-CRMAttributes -From $AdditionAttributes -To $userAttributes
 
     $resp = New-CRMEntity -Connection $Connection -EntityName 'systemuser' -Attributes $userAttributes -ReturnResponses
+
+    $resp | Assert-CRMOrganizationResponse
 
     $resp.Responses[0].Response.id
 }
@@ -397,14 +401,13 @@ Function New-CRMQueue
         $queueAttributes['emailaddress'] = $Email
     }
 
-    # TODO Add returnresponse
     $resp = New-CRMEntity -Connection $Connection -EntityName 'queue' -Attributes $queueAttributes -ReturnResponses
 
     $queueId = $resp.Responses[0].Response.id
 
     if ($Email -ne [string]::Empty)
     {
-        $queueEntity = Get-CRMEntityById -Connection $Connection -EntityName 'queue' -Id $queueId -Colummns 'emailrouteraccessapproval'
+        $queueEntity = Get-CRMEntityById -Connection $Connection -EntityName 'queue' -Id $queueId -Columns 'emailrouteraccessapproval'
         $queueEntity['emailrouteraccessapproval'] = Get-CRMOptionSetValue -Value 1 # Approved
         $resp = Update-CRMEntity -Connection $Connection -Entity $queueEntity
         $resp | Assert-CRMOrganizationResponse
@@ -531,6 +534,29 @@ Add-Type -TypeDefinition @"
     }
 "@
 
+$currencyInfo = @{
+    [CurrencyCodeEnum]::CHF = @{
+        'name' = 'Swiss franc'
+        'symbol' = 'Fr.'
+    }
+    [CurrencyCodeEnum]::EUR = @{
+        'name' = 'Euro'
+        'symbol' = '€'
+    }
+    [CurrencyCodeEnum]::GBP = @{
+        'name' = 'Pound Sterling'
+        'symbol' = '£'
+    }
+    [CurrencyCodeEnum]::RUB = @{
+        'name' = 'Russian ruble'
+        'symbol' = 'р.'
+    }
+    [CurrencyCodeEnum]::USD = @{
+        'name' = 'US Dollar'
+        'symbol' = '$'
+    }
+}
+
 Function Get-CRMTransactionCurrency
 {
     [CmdletBinding()]
@@ -575,54 +601,13 @@ Function New-CRMTransactionCurrency
         [hashtable]$AdditionAttributes = @{}
     )
 
-    # Settings
     $currencyAttributes = @{}
     $currencyAttributes['currencyprecision'] = 2
     $currencyAttributes['exchangerate'] = [decimal]1.0
     $currencyAttributes['isocurrencycode'] = [string]$CurrencyCode
 
-    switch ($CurrencyCode)
-    {
-        ([CurrencyCodeEnum]::CHF -as [string])
-        {
-            $currencyAttributes['currencyname'] = 'Swiss franc'
-            $currencyAttributes['currencysymbol'] = 'Fr.'
-            break
-        }
-
-        ([CurrencyCodeEnum]::EUR -as [string])
-        {
-            $currencyAttributes['currencyname'] = 'Euro'
-            $currencyAttributes['currencysymbol'] = '€'
-            break
-        }
-
-        ([CurrencyCodeEnum]::GBP  -as [string])
-        {
-            $currencyAttributes['currencyname'] = 'Pound Sterling'
-            $currencyAttributes['currencysymbol'] = '£'
-            break
-        }
-
-        ([CurrencyCodeEnum]::RUB -as [string])
-        {
-            $currencyAttributes['currencyname'] = 'Russian ruble'
-            $currencyAttributes['currencysymbol'] = 'р.'
-            break
-        }
-
-        ([CurrencyCodeEnum]::USD -as [string])
-        {
-            $currencyAttributes['currencyname'] = 'US Dollar'
-            $currencyAttributes['currencysymbol'] = '$'
-            break
-        }
-
-        defaut
-        {
-            break
-        }
-    }
+    $currencyAttributes['currencyname'] = $currencyInfo[$CurrencyCode]['name']
+    $currencyAttributes['currencysymbol'] = $currencyInfo[$CurrencyCode]['symbol']
 
     Merge-CRMAttributes -From $AdditionAttributes -To $currencyAttributes
 
