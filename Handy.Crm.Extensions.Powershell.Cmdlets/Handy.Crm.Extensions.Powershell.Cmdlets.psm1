@@ -55,6 +55,36 @@ Function Get-CRMOptionSetValue
 }
 
 
+Function Get-CRMEntityMetadata
+{
+    [CmdletBinding()]
+    [OutputType([Microsoft.Xrm.Sdk.Metadata.EntityMetadata])]
+    Param(
+        [Parameter(Mandatory=$true)]
+        [Microsoft.Xrm.Client.CrmConnection]$Connection,
+
+        [Parameter(Mandatory=$true)]
+        [string]$LogicalName
+    )
+
+    Begin {}
+    Process
+    {
+        $parameters = @{}
+
+        $parameters['EntityFilters'] = [Microsoft.Xrm.Sdk.Metadata.EntityFilters]::All
+        $parameters['LogicalName'] = $LogicalName
+        $parameters['MetadataId'] = [guid]::Empty
+        $parameters['RetrieveAsIfPublished'] = $false
+
+        $response = Invoke-CRMOrganizationRequest -Connection $Connection -RequestName 'RetrieveEntity' -Parameters $parameters
+
+        $response['EntityMetadata']
+    }
+    End {}
+}
+
+
 Function Get-CRMEntityReference
 {
     [CmdletBinding()]

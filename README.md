@@ -10,6 +10,7 @@ Handy.Crm.Extensions.Powershell.Cmdlets - is a set of cmdlets for PowerShell ext
 * Assert-CRMOrganizationResponse
 * Get-CRMBusinessUnit
 * Get-CRMDuplicateRule
+* Get-CRMEntityMetadata
 * Get-CRMEntityReference
 * Get-CRMOptionSetValue
 * Get-CRMSolution
