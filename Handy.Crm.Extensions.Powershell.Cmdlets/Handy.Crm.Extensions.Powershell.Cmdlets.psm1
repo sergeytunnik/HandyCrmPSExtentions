@@ -15,12 +15,12 @@ Function Assert-CRMOrganizationResponse
     {
         if ($Response.IsFaulted -eq $true)
         {
-            Write-Verbose "ExecuteMultiple finished with faults"
+            Write-Verbose -Message "ExecuteMultiple finished with faults"
 
             $message = "ExecuteMultpleResponse finished with fault."
             foreach ($r in $Response.Responses)
             {
-                if ($r.Fault -ne $null)
+                if ($null -ne $r.Fault)
                 {
                     $message += "`r`n$($r.RequestIndex): $($r.Fault.Message)"
                 }
@@ -28,7 +28,7 @@ Function Assert-CRMOrganizationResponse
             throw $message
         } else
         {
-            Write-Verbose "ExecuteMultiple finished without faults"
+            Write-Verbose -Message "ExecuteMultiple finished without faults"
         }
     }
     End {}
@@ -109,7 +109,7 @@ Function Get-CRMEntityReference
 }
 
 
-Function Merge-CRMAttributes
+Function Merge-CRMAttribute
 {
     [CmdletBinding()]
     Param(
@@ -211,19 +211,19 @@ Function Set-CRMSDKStepState
         $excludeCondition = [string]::Empty
     }
 
-    Write-Verbose "FetchXML:"
-    Write-Verbose "$([string]::Format($fetchXml, $SolutionId, $includeCondition, $excludeCondition))"
+    Write-Verbose -Message "FetchXML:"
+    Write-Verbose -Message "$([string]::Format($fetchXml, $SolutionId, $includeCondition, $excludeCondition))"
 
     $steps = Get-CRMEntity -Connection $Connection -FetchXml ([string]::Format($fetchXml, $SolutionId, $includeCondition, $excludeCondition))
 
-    if (($steps -eq $null) -or ($steps.Count -eq 0))
+    if (($null -eq $steps) -or ($steps.Count -eq 0))
     {
-        Write-Warning "Found nothing to update"
+        Write-Warning -Message -Message "Found nothing to update"
         return
     }
 
-    Write-Verbose "Found $($steps.Count) steps"
-    Write-Verbose "Updating them"
+    Write-Verbose -Message "Found $($steps.Count) steps"
+    Write-Verbose -Message "Updating them"
 
     switch ($State)
     {
@@ -283,12 +283,12 @@ Function New-CRMBusinessUnit
 
         [Parameter(Mandatory=$false)]
         [ValidateNotNullOrEmpty()]
-        [guid]$ParentBusinessUnitId
+        [guid]$ParentBusinessUnitId = $null
     )
 
     if ($ParentBusinessUnitId -eq $null)
     {
-        Write-Verbose "Getting root BU"
+        Write-Verbose -Message "Getting root BU"
 
         $fetchXml = @"
 <fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="true" count="1">
@@ -352,7 +352,7 @@ Function New-CRMUser
     $userAttributes['fullname'] = "$($FirstName) $($LastName)"
     $userAttributes['businessunitid'] = Get-CRMEntityReference -EntityName 'businessunit' -Id $BusinessUnitId
 
-    Merge-CRMAttributes -From $AdditionAttributes -To $userAttributes
+    Merge-CRMAttribute -From $AdditionAttributes -To $userAttributes
 
     $resp = New-CRMEntity -Connection $Connection -EntityName 'systemuser' -Attributes $userAttributes -ReturnResponses
 
@@ -502,7 +502,7 @@ Function Add-CRMRoleForUser
 
     $role = Get-CRMEntity -Connection $Connection -FetchXml ([string]::Format($fetchXml, $RoleName, $User['businessunitid'].Id)) | Select-Object -Index 0
 
-    if ($role -eq $null)
+    if ($null -eq $role)
     {
         throw "Couldn't find role $($RoleName) or something went wrong."
     }
@@ -542,7 +542,7 @@ Function Remove-CRMRoleForUser
 
     $role = Get-CRMEntity -Connection $Connection -FetchXml ([string]::Format($fetchXml, $RoleName, $User['businessunitid'].Id)) | Select-Object -Index 0
 
-    if ($role -eq $null)
+    if ($null -eq $role)
     {
         throw "Couldn't find role $($RoleName) or something went wrong."
     }
@@ -639,7 +639,7 @@ Function New-CRMTransactionCurrency
     $currencyAttributes['currencyname'] = $currencyInfo[$CurrencyCode]['name']
     $currencyAttributes['currencysymbol'] = $currencyInfo[$CurrencyCode]['symbol']
 
-    Merge-CRMAttributes -From $AdditionAttributes -To $currencyAttributes
+    Merge-CRMAttribute -From $AdditionAttributes -To $currencyAttributes
 
     $resp = New-CRMEntity -Connection $Connection -EntityName 'transactioncurrency' -Attributes $currencyAttributes -ReturnResponses
 
