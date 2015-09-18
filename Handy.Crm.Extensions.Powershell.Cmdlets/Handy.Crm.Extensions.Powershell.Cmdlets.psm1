@@ -127,6 +127,178 @@ Function Merge-CRMAttribute
 }
 
 
+Function Add-CRMPrivilegesRole
+{
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory=$true)]
+        [Microsoft.Xrm.Client.CrmConnection]$Connection,
+
+        [Parameter(Mandatory=$true)]
+        [ValidateNotNull()]
+        [guid]$RoleId,
+
+        [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [Microsoft.Crm.Sdk.Messages.RolePrivilege[]]$Privileges
+    )
+
+    $parameters = @{
+        RoleId = $RoleId;
+        Privileges = $Privileges
+    }
+
+    $response = Invoke-CRMOrganizationRequest -Connection $Connection -RequestName 'AddPrivilegesRole' -Parameters $parameters
+    # $response
+}
+
+
+Function Remove-CRMPrivilegesRole
+{
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory=$true)]
+        [Microsoft.Xrm.Client.CrmConnection]$Connection,
+
+        [Parameter(Mandatory=$true)]
+        [ValidateNotNull()]
+        [guid]$RoleId,
+
+        [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [guid]$PrivilegeId
+    )
+
+    $parameters = @{
+        RoleId = $RoleId;
+        PrivilegeId = $PrivilegeId
+    }
+
+    $response = Invoke-CRMOrganizationRequest -Connection $Connection -RequestName 'RemovePrivilegesRole' -Parameters $parameters
+    # $response
+}
+
+
+Function Get-CRMPrivilege
+{
+    [CmdletBinding()]
+    [OutputType([Microsoft.Xrm.Sdk.Entity])]
+    Param(
+        [Parameter(Mandatory=$true)]
+        [Microsoft.Xrm.Client.CrmConnection]$Connection,
+
+        [Parameter(Mandatory=$true,
+            ParameterSetName='Id')]
+        [ValidateNotNull()]
+        [guid]$Id,
+
+        [Parameter(Mandatory=$true,
+            ParameterSetName='Name')]
+        [ValidateNotNullOrEmpty()]
+        [string]$Name
+    )
+
+    $fetchXml = @"
+<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="true" count="1">
+  <entity name="privilege">
+    <all-attributes />
+    <filter type="and">
+      {0}
+    </filter>
+  </entity>
+</fetch>
+"@
+
+    switch ($PSCmdlet.ParameterSetName)
+    {
+        'Id'
+        {
+            $condition = '<condition attribute="privilegeid" operator="eq" value="{0}" />' -f $Id
+        }
+
+        'Name'
+        {
+            $condition = '<condition attribute="name" operator="eq" value="{0}" />' -f $Name
+        }
+    }
+
+    $privilege = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXml -f $condition) | Select-Object -Index 0
+    $privilege
+}
+
+
+Function Get-CRMRole
+{
+    <#
+        .DESCRIPTION
+        Without All switch it returns only root role, which is usually used for editing roles.
+        With All switch present it returns all roles it can find in organization.
+
+        .LINK
+        Get-CRMConnection
+
+    #>
+    [CmdletBinding()]
+    [OutputType([Microsoft.Xrm.Sdk.Entity])]
+    Param(
+        [Parameter(Mandatory=$true)]
+        [Microsoft.Xrm.Client.CrmConnection]$Connection,
+
+        [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Name,
+
+        [Parameter(Mandatory=$false)]
+        [switch]$All
+    )
+
+    $fetchXml = @"
+<fetch version="1.0" output-format="xml-platform" mapping="logical">
+  <entity name="role">
+    <all-attributes />
+    <filter type="and">
+      <condition attribute="name" operator="eq" value="{0}" />
+      <condition attribute="parentroleid" operator="null" />
+    </filter>
+  </entity>
+</fetch>
+"@
+
+    if ($All)
+    {
+        $fetchXml = $fetchXml.Replace('<condition attribute="parentroleid" operator="null" />', '')
+    }
+
+    $roles = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXml -f $Name)
+
+    $roles
+}
+
+
+Function Get-CRMRolePrivilege
+{
+    [CmdletBinding()]
+    [OutputType([Microsoft.Crm.Sdk.Messages.RolePrivilege])]
+    Param(
+        [Parameter(Mandatory=$true)]
+        [Microsoft.Crm.Sdk.Messages.PrivilegeDepth]$Depth,
+
+        [Parameter(Mandatory=$true)]
+        [guid]$Id
+
+    )
+
+    Begin {}
+    Process
+    {
+        $rolePrivilege = New-Object -TypeName 'Microsoft.Crm.Sdk.Messages.RolePrivilege' -ArgumentList $Depth, $Id
+
+        $rolePrivilege
+    }
+    End {}
+}
+
+
 Function Get-CRMSolution
 {
     [CmdletBinding()]

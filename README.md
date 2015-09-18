@@ -6,6 +6,7 @@ Handy.Crm.Extensions.Powershell.Cmdlets - is a set of cmdlets for PowerShell ext
 2. Profit
 
 #### List of Cmdlets:
+* Add-CRMPrivilegesRole
 * Add-CRMRoleForUser
 * Assert-CRMOrganizationResponse
 * Get-CRMBusinessUnit
@@ -13,6 +14,9 @@ Handy.Crm.Extensions.Powershell.Cmdlets - is a set of cmdlets for PowerShell ext
 * Get-CRMEntityMetadata
 * Get-CRMEntityReference
 * Get-CRMOptionSetValue
+* Get-CRMPrivilege
+* Get-CRMRole
+* Get-CRMRolePrivilege
 * Get-CRMSolution
 * Get-CRMTransactionCurrency
 * Merge-CRMAttributes
@@ -20,6 +24,7 @@ Handy.Crm.Extensions.Powershell.Cmdlets - is a set of cmdlets for PowerShell ext
 * New-CRMQueue
 * New-CRMTransactionCurrency
 * New-CRMUser
+* Remove-CRMPrivilegesRole
 * Remove-CRMRoleForUser
 * Set-CRMQueueForUser
 * Set-CRMSDKStepMode
