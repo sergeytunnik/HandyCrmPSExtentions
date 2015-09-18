@@ -151,7 +151,7 @@ Function Get-CRMSolution
 </fetch>
 "@
 
-    $solution = Get-CRMEntity -Connection $Connection -FetchXml ([string]::Format($fetchXml, $Name)) | Select-Object -Index 0
+    $solution = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXml -f $Name) | Select-Object -Index 0
     $solution
 }
 
@@ -212,9 +212,9 @@ Function Set-CRMSDKStepState
     }
 
     Write-Verbose -Message "FetchXML:"
-    Write-Verbose -Message "$([string]::Format($fetchXml, $SolutionId, $includeCondition, $excludeCondition))"
+    Write-Verbose -Message ($fetchXml -f $SolutionId, $includeCondition, $excludeCondition)
 
-    $steps = Get-CRMEntity -Connection $Connection -FetchXml ([string]::Format($fetchXml, $SolutionId, $includeCondition, $excludeCondition))
+    $steps = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXml -f $SolutionId, $includeCondition, $excludeCondition)
 
     if (($null -eq $steps) -or ($steps.Count -eq 0))
     {
@@ -264,7 +264,7 @@ Function Get-CRMBusinessUnit
 </fetch>
 "@
 
-    $bu = Get-CRMEntity -Connection $Connection -FetchXml ([string]::Format($fetchXml, $Name))
+    $bu = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXml -f $Name)
 
     $bu
 }
@@ -395,7 +395,7 @@ Function Get-CRMDuplicateRule
 </fetch>
 "@
 
-    $duplicateRule = Get-CRMEntity -Connection $Connection -FetchXml ([string]::Format($fetchXml, $Name, $StateCode, $StatusCode)) | Select-Object -Index 0
+    $duplicateRule = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXml -f $Name, $StateCode, $StatusCode) | Select-Object -Index 0
 
     $duplicateRule
 }
@@ -500,7 +500,7 @@ Function Add-CRMRoleForUser
 </fetch>
 "@
 
-    $role = Get-CRMEntity -Connection $Connection -FetchXml ([string]::Format($fetchXml, $RoleName, $User['businessunitid'].Id)) | Select-Object -Index 0
+    $role = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXml -f $RoleName, $User['businessunitid'].Id) | Select-Object -Index 0
 
     if ($null -eq $role)
     {
@@ -540,7 +540,7 @@ Function Remove-CRMRoleForUser
 </fetch>
 "@
 
-    $role = Get-CRMEntity -Connection $Connection -FetchXml ([string]::Format($fetchXml, $RoleName, $User['businessunitid'].Id)) | Select-Object -Index 0
+    $role = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXml -f $RoleName, $User['businessunitid'].Id) | Select-Object -Index 0
 
     if ($null -eq $role)
     {
@@ -610,7 +610,7 @@ Function Get-CRMTransactionCurrency
 </fetch>
 "@
 
-    $tc = Get-CRMEntity -Connection $Connection -FetchXml ([string]::Format($fetchXml, $CurrencyCode)) | Select-Object -Index 0
+    $tc = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXml -f $CurrencyCode) | Select-Object -Index 0
 
     $tc
 }
