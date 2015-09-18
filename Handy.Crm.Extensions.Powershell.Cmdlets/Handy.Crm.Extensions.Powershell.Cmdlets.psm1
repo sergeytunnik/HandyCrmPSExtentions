@@ -153,7 +153,7 @@ Function Add-CRMPrivilegesRole
 }
 
 
-Function Remove-CRMPrivilegesRole
+Function Remove-CRMPrivilegeRole
 {
     [CmdletBinding()]
     Param(
@@ -174,7 +174,7 @@ Function Remove-CRMPrivilegesRole
         PrivilegeId = $PrivilegeId
     }
 
-    $response = Invoke-CRMOrganizationRequest -Connection $Connection -RequestName 'RemovePrivilegesRole' -Parameters $parameters
+    $response = Invoke-CRMOrganizationRequest -Connection $Connection -RequestName 'RemovePrivilegeRole' -Parameters $parameters
     # $response
 }
 
