@@ -1,8 +1,4 @@
-﻿#
-# Module manifest for module 'Handy.Crm.Extensions.Powershell.Cmdlets'
-
-
-@{
+﻿@{
 
 # Script module or binary module file associated with this manifest.
 RootModule = 'Handy.Crm.Extensions.Powershell.Cmdlets'
@@ -20,10 +16,10 @@ Author = 'Sergey Tunnik'
 CompanyName = ''
 
 # Copyright statement for this module
-Copyright = '(c) 2015'
+Copyright = '(c) 2015 Sergey Tunnik, licensed under MIT Licence.'
 
 # Description of the functionality provided by this module
-# Description = ''
+Description = 'Set of cmdelts that makes work with Handy.Crm.Powershell.Cmdlets module significantly more convenient.'
 
 # Minimum version of the Windows PowerShell engine required by this module
 PowerShellVersion = '4.0'

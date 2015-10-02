@@ -9,6 +9,8 @@ Handy.Crm.Extensions.Powershell.Cmdlets - is a set of cmdlets for PowerShell ext
 * Add-CRMPrivilegesRole
 * Add-CRMRoleForUser
 * Assert-CRMOrganizationResponse
+* Disable-CRMWorkflow (aliased as Activate-CRMWorkflow)
+* Enable-CRMWorkflow (aliased as Deactivate-CRMWorkflow)
 * Get-CRMBusinessUnit
 * Get-CRMDuplicateRule
 * Get-CRMEntityMetadata

@@ -26,7 +26,8 @@ Function Assert-CRMOrganizationResponse
                 }
             }
             throw $message
-        } else
+        }
+        else
         {
             Write-Verbose -Message "ExecuteMultiple finished without faults"
         }
@@ -230,13 +231,12 @@ Function Get-CRMPrivilege
 Function Get-CRMRole
 {
     <#
-        .DESCRIPTION
-        Without All switch it returns only root role, which is usually used for editing roles.
-        With All switch present it returns all roles it can find in organization.
+    .DESCRIPTION
+    Without All switch it returns only root role, which is usually used for editing roles.
+    With All switch present it returns all roles it can find in organization.
 
-        .LINK
-        Get-CRMConnection
-
+    .LINK
+    Get-CRMConnection
     #>
     [CmdletBinding()]
     [OutputType([Microsoft.Xrm.Sdk.Entity])]
@@ -455,10 +455,10 @@ Function New-CRMBusinessUnit
 
         [Parameter(Mandatory=$false)]
         [ValidateNotNullOrEmpty()]
-        [guid]$ParentBusinessUnitId = $null
+        [guid]$ParentBusinessUnitId = [guid]::Empty
     )
 
-    if ($ParentBusinessUnitId -eq $null)
+    if ($ParentBusinessUnitId -eq [guid]::Empty)
     {
         Write-Verbose -Message "Getting root BU"
 
@@ -859,3 +859,109 @@ Function Set-CRMSDKStepMode
     $resp = Update-CRMEntity -Connection $Connection -Entity $step
     $resp | Assert-CRMOrganizationResponse
 }
+
+
+Function Enable-CRMWorkflow
+{
+    <#
+    .SYNOPSIS
+    Activates workflow.
+
+    .NOTES
+    Only owner of workflow can change its state.
+    There may be several workflows with same name. This cmdlet will perfom action on all of them.
+
+    .LINK
+    Get-CRMConnection
+    #>
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory=$true)]
+        [Microsoft.Xrm.Client.CrmConnection]$Connection,
+
+        [Parameter(Mandatory=$true)]
+        [string]$Name
+    )
+
+    $fetchXmlWorkflow = @"
+<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">
+  <entity name="workflow">
+    <filter type="and">
+      <condition attribute="name" operator="eq" value="{0}" />
+      <condition attribute="type" operator="eq" value="1" />
+    </filter>
+  </entity>
+</fetch>
+"@
+
+    $workflows  = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXmlWorkflow -f $Name)
+
+    if ($workflows.Count -gt 0)
+    {
+        Write-Verbose -Message "Found $($workflows.Count) workflows with name '$Name'"
+
+        $response = Set-CRMState -Connection $Connection -Entity $workflows -State 1 -Status 2 -ContinueOnError
+
+        $response | Assert-CRMOrganizationResponse
+    }
+    else
+    {
+        Write-Verbose -Message "No workflows with name '$Name' were found"
+        # Or throw?
+    }
+}
+
+
+Function Disable-CRMWorkflow
+{
+    <#
+    .SYNOPSIS
+    Deactivates workflow.
+
+    .NOTES
+    Only owner of workflow can change its state.
+    There may be several workflows with same name. This cmdlet will perfom action on all of them.
+
+    .LINK
+    Get-CRMConnection
+    #>
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory=$true)]
+        [Microsoft.Xrm.Client.CrmConnection]$Connection,
+
+        [Parameter(Mandatory=$true)]
+        [string]$Name
+    )
+
+    $fetchXmlWorkflow = @"
+<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">
+  <entity name="workflow">
+    <filter type="and">
+      <condition attribute="name" operator="eq" value="{0}" />
+      <condition attribute="type" operator="eq" value="1" />
+    </filter>
+  </entity>
+</fetch>
+"@
+
+    $workflows  = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXmlWorkflow -f $Name)
+
+    if ($workflows.Count -gt 0)
+    {
+        Write-Verbose -Message "Found $($workflows.Count) workflows with name '$Name'"
+
+        $response = Set-CRMState -Connection $Connection -Entity $workflows -State 0 -Status 1 -ContinueOnError
+
+        $response | Assert-CRMOrganizationResponse
+    }
+    else
+    {
+        Write-Verbose -Message "No workflows with name '$Name' were found"
+        # Or throw?
+    }
+}
+
+
+New-Alias -Name 'Activate-CRMWorkflow' -Value 'Enable-CRMWorkflow'
+New-Alias -Name 'Deactivate-CRMWorkflow' -Value 'Disable-CRMWorkflow' 
