@@ -1,4 +1,4 @@
-﻿# Handy.Crm.Extensions.Powershell.Cmdlets
+# Handy.Crm.Extensions.Powershell.Cmdlets
 Handy.Crm.Extensions.Powershell.Cmdlets - is a set of cmdlets for PowerShell extending Handy.Crm.Powershell.Cmdlets.
 
 #### Installation
