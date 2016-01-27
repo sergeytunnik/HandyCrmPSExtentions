@@ -731,6 +731,7 @@ Add-Type -TypeDefinition @"
         CHF,
         EUR,
         GBP,
+        JPY,
         RUB,
         USD
     }
@@ -748,6 +749,10 @@ $currencyInfo = @{
     [CurrencyCodeEnum]::GBP = @{
         'name' = 'Pound Sterling'
         'symbol' = '£'
+    }
+    [CurrencyCodeEnum]::JPY = @{
+        'name' = '円'
+        'symbol' = '¥'
     }
     [CurrencyCodeEnum]::RUB = @{
         'name' = 'Russian ruble'
@@ -879,11 +884,57 @@ Function Enable-CRMWorkflow
         [Parameter(Mandatory=$true)]
         [Microsoft.Xrm.Client.CrmConnection]$Connection,
 
-        [Parameter(Mandatory=$true)]
-        [string]$Name
+        [Parameter(Mandatory=$true,
+            ParameterSetName='Name')]
+        [ValidateNotNullOrEmpty()]
+        [string]$Name,
+
+        [Parameter(Mandatory=$true,
+            ParameterSetName='SolutionId')]
+        [ValidateNotNull()]
+        [guid]$SolutionId,
+
+        [Parameter(Mandatory=$true,
+            ParameterSetName='Id')]
+        [ValidateNotNull()]
+        [guid]$Id
     )
 
-    $fetchXmlWorkflow = @"
+
+    switch ($PSCmdlet.ParameterSetName)
+    {
+        'Id'
+        {
+            $fetchXmlWorkflow = @"
+<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">
+  <entity name="workflow">
+    <filter type="and">
+      <condition attribute="workflowid" operator="eq" value="{0}" />
+      <condition attribute="type" operator="eq" value="1" />
+    </filter>
+  </entity>
+</fetch>
+"@
+
+            $workflows  = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXmlWorkflow -f $Id)
+
+            if ($workflows.Count -gt 0)
+            {
+                Write-Verbose -Message "Found $($workflows.Count) workflows with Id '$Id'"
+
+                $response = Set-CRMState -Connection $Connection -Entity $workflows -State 1 -Status 2 -ContinueOnError
+
+                $response | Assert-CRMOrganizationResponse
+            }
+            else
+            {
+                Write-Verbose -Message "No workflows with Id '$Id' were found"
+            }
+        }
+
+        'Name'
+        {
+            $fetchXmlWorkflow = @"
 <fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">
   <entity name="workflow">
     <filter type="and">
@@ -894,20 +945,50 @@ Function Enable-CRMWorkflow
 </fetch>
 "@
 
-    $workflows  = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXmlWorkflow -f $Name)
+            $workflows  = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXmlWorkflow -f $Name)
 
-    if ($workflows.Count -gt 0)
-    {
-        Write-Verbose -Message "Found $($workflows.Count) workflows with name '$Name'"
+            if ($workflows.Count -gt 0)
+            {
+                Write-Verbose -Message "Found $($workflows.Count) workflows with name '$Name'"
 
-        $response = Set-CRMState -Connection $Connection -Entity $workflows -State 1 -Status 2 -ContinueOnError
+                $response = Set-CRMState -Connection $Connection -Entity $workflows -State 1 -Status 2 -ContinueOnError
 
-        $response | Assert-CRMOrganizationResponse
-    }
-    else
-    {
-        Write-Verbose -Message "No workflows with name '$Name' were found"
-        # Or throw?
+                $response | Assert-CRMOrganizationResponse
+            }
+            else
+            {
+                Write-Verbose -Message "No workflows with name '$Name' were found"
+            }
+        }
+
+        'SolutionId'
+        {
+            $fetchXmlWorkflow = @"
+<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">
+  <entity name="workflow">
+    <filter type="and">
+      <condition attribute="solutionid" operator="eq" value="{0}" />
+      <condition attribute="type" operator="eq" value="1" />
+    </filter>
+  </entity>
+</fetch>
+"@
+
+            $workflows  = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXmlWorkflow -f $SolutionId)
+
+            if ($workflows.Count -gt 0)
+            {
+                Write-Verbose -Message "Found $($workflows.Count) workflows in solution with Id '$SolutionId'"
+
+                $response = Set-CRMState -Connection $Connection -Entity $workflows -State 1 -Status 2 -ContinueOnError
+
+                $response | Assert-CRMOrganizationResponse
+            }
+            else
+            {
+                Write-Verbose -Message "No workflows in solution with Id '$SolutionId' were found"
+            }
+        }
     }
 }
 
