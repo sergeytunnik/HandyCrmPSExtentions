@@ -1,4 +1,4 @@
-Set-StrictMode -Version Latest
+﻿Set-StrictMode -Version Latest
 
 
 Function Assert-CRMOrganizationResponse
@@ -390,7 +390,7 @@ Function Set-CRMSDKStepState
 
     if (($null -eq $steps) -or ($steps.Count -eq 0))
     {
-        Write-Warning -Message -Message "Found nothing to update"
+        Write-Warning -Message "Found nothing to update"
         return
     }
 
