@@ -1044,5 +1044,89 @@ Function Disable-CRMWorkflow
 }
 
 
+function Get-CRMSiteMap {
+    [CmdletBinding()]
+    [OutputType([string])]
+    Param(
+        [Parameter(Mandatory=$true)]
+        [Microsoft.Xrm.Client.CrmConnection]$Connection
+    )
+    
+    $fetchXml = @"
+<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">
+    <entity name="sitemap">            
+    </entity>
+</fetch>
+"@
+
+    $sitemap = Get-CRMEntity -Connection $Connection -FetchXml $fetchXml | Select-Object -Index 0
+
+    $sitemap['sitemapxml']
+}
+
+
+function Set-CRMSiteMap {
+    [CmdletBinding()]
+    [OutputType([void])]
+    Param(
+        [Parameter(Mandatory=$true)]
+        [Microsoft.Xrm.Client.CrmConnection]$Connection,
+        
+        [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$SiteMapXml,
+        
+        [Parameter(Mandatory=$false)]
+        [switch]$Publish
+    )
+    
+    $fetchXml = @"
+<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">
+    <entity name="sitemap">            
+    </entity>
+</fetch>
+"@
+
+    Write-Verbose -Message "Getting sitemap"
+    $sitemap = Get-CRMEntity -Connection $Connection -FetchXml $fetchXml | Select-Object -Index 0
+    $sitemap['sitemapxml'] = $SiteMapXml
+    
+    Write-Verbose -Message "Updating sitemap"
+    Update-CRMEntity -Connection $Connection -Entity $sitemap | Assert-CRMOrganizationResponse
+    
+    if ($Publish) {
+        Write-Verbose -Message "Publishing (only sitemap)"
+        Publish-CRMXml -Connection $Connection -ParameterXml '<importexportxml><sitemaps><sitemap></sitemap></sitemaps></importexportxml>'
+    }
+}
+
+
+function Publish-CRMXml {
+    <#
+    .SYNOPSIS
+    Publishes only specific solution components.
+
+    .LINK
+    https://msdn.microsoft.com/en-us/library/microsoft.crm.sdk.messages.publishxmlrequest.parameterxml.aspx
+    Get-CRMConnection
+    #>
+    [CmdletBinding()]
+    [OutputType([void])]
+    Param(
+        [Parameter(Mandatory=$true)]
+        [Microsoft.Xrm.Client.CrmConnection]$Connection,
+        
+        [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ParameterXml
+    )
+    
+    $parameters = @{}
+    $parameters['ParameterXml'] = $ParameterXml
+    
+    $response = Invoke-CRMOrganizationRequest -Connection $Connection -RequestName 'PublishXml' -Parameters $parameters
+}
+
+
 New-Alias -Name 'Activate-CRMWorkflow' -Value 'Enable-CRMWorkflow'
 New-Alias -Name 'Deactivate-CRMWorkflow' -Value 'Disable-CRMWorkflow' 
