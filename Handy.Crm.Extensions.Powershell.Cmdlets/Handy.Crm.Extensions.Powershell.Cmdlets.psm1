@@ -1,8 +1,4 @@
-﻿Set-StrictMode -Version Latest
-
-
-Function Assert-CRMOrganizationResponse
-{
+﻿function Assert-CRMOrganizationResponse {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory=$true,
@@ -11,24 +7,19 @@ Function Assert-CRMOrganizationResponse
     )
 
     Begin {}
-    Process
-    {
-        if ($Response.IsFaulted -eq $true)
-        {
+    Process {
+        if ($Response.IsFaulted -eq $true) {
             Write-Verbose -Message "ExecuteMultiple finished with faults"
 
             $message = "ExecuteMultpleResponse finished with fault."
-            foreach ($r in $Response.Responses)
-            {
-                if ($null -ne $r.Fault)
-                {
+            foreach ($r in $Response.Responses) {
+                if ($null -ne $r.Fault) {
                     $message += "`r`n$($r.RequestIndex): $($r.Fault.Message)"
                 }
             }
             throw $message
         }
-        else
-        {
+        else {
             Write-Verbose -Message "ExecuteMultiple finished without faults"
         }
     }
@@ -36,8 +27,7 @@ Function Assert-CRMOrganizationResponse
 }
 
 
-Function Get-CRMOptionSetValue
-{
+function Get-CRMOptionSetValue {
     [CmdletBinding()]
     [OutputType([Microsoft.Xrm.Sdk.OptionSetValue])]
     Param(
@@ -46,8 +36,7 @@ Function Get-CRMOptionSetValue
     )
 
     Begin {}
-    Process
-    {
+    Process {
         $optionSetValue = New-Object -TypeName 'Microsoft.Xrm.Sdk.OptionSetValue' -ArgumentList $Value
 
         $optionSetValue
@@ -56,8 +45,7 @@ Function Get-CRMOptionSetValue
 }
 
 
-Function Get-CRMEntityMetadata
-{
+function Get-CRMEntityMetadata {
     [CmdletBinding()]
     [OutputType([Microsoft.Xrm.Sdk.Metadata.EntityMetadata])]
     Param(
@@ -69,8 +57,7 @@ Function Get-CRMEntityMetadata
     )
 
     Begin {}
-    Process
-    {
+    Process {
         $parameters = @{}
 
         $parameters['EntityFilters'] = [Microsoft.Xrm.Sdk.Metadata.EntityFilters]::All
@@ -86,8 +73,7 @@ Function Get-CRMEntityMetadata
 }
 
 
-Function Get-CRMEntityReference
-{
+function Get-CRMEntityReference {
     [CmdletBinding()]
     [OutputType([Microsoft.Xrm.Sdk.EntityReference])]
     Param(
@@ -100,8 +86,7 @@ Function Get-CRMEntityReference
     )
 
     Begin {}
-    Process
-    {
+    Process {
         $entityReference = New-Object -TypeName 'Microsoft.Xrm.Sdk.EntityReference' -ArgumentList $EntityName, $Id
 
         $entityReference
@@ -110,8 +95,7 @@ Function Get-CRMEntityReference
 }
 
 
-Function Merge-CRMAttribute
-{
+function Merge-CRMAttribute {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory=$true)]
@@ -128,8 +112,7 @@ Function Merge-CRMAttribute
 }
 
 
-Function Add-CRMPrivilegesRole
-{
+function Add-CRMPrivilegesRole {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory=$true)]
@@ -154,8 +137,7 @@ Function Add-CRMPrivilegesRole
 }
 
 
-Function Remove-CRMPrivilegeRole
-{
+function Remove-CRMPrivilegeRole {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory=$true)]
@@ -180,8 +162,7 @@ Function Remove-CRMPrivilegeRole
 }
 
 
-Function Get-CRMPrivilege
-{
+function Get-CRMPrivilege {
     [CmdletBinding()]
     [OutputType([Microsoft.Xrm.Sdk.Entity])]
     Param(
@@ -210,15 +191,12 @@ Function Get-CRMPrivilege
 </fetch>
 "@
 
-    switch ($PSCmdlet.ParameterSetName)
-    {
-        'Id'
-        {
+    switch ($PSCmdlet.ParameterSetName) {
+        'Id' {
             $condition = '<condition attribute="privilegeid" operator="eq" value="{0}" />' -f $Id
         }
 
-        'Name'
-        {
+        'Name' {
             $condition = '<condition attribute="name" operator="eq" value="{0}" />' -f $Name
         }
     }
@@ -228,8 +206,7 @@ Function Get-CRMPrivilege
 }
 
 
-Function Get-CRMRole
-{
+function Get-CRMRole {
     <#
     .DESCRIPTION
     Without All switch it returns only root role, which is usually used for editing roles.
@@ -264,8 +241,7 @@ Function Get-CRMRole
 </fetch>
 "@
 
-    if ($All)
-    {
+    if ($All) {
         $fetchXml = $fetchXml.Replace('<condition attribute="parentroleid" operator="null" />', '')
     }
 
@@ -275,8 +251,7 @@ Function Get-CRMRole
 }
 
 
-Function Get-CRMRolePrivilege
-{
+function Get-CRMRolePrivilege {
     [CmdletBinding()]
     [OutputType([Microsoft.Crm.Sdk.Messages.RolePrivilege])]
     Param(
@@ -289,8 +264,7 @@ Function Get-CRMRolePrivilege
     )
 
     Begin {}
-    Process
-    {
+    Process {
         $rolePrivilege = New-Object -TypeName 'Microsoft.Crm.Sdk.Messages.RolePrivilege' -ArgumentList $Depth, $Id
 
         $rolePrivilege
@@ -299,8 +273,7 @@ Function Get-CRMRolePrivilege
 }
 
 
-Function Get-CRMSolution
-{
+function Get-CRMSolution {
     [CmdletBinding()]
     [OutputType([Microsoft.Xrm.Sdk.Entity])]
     Param(
@@ -328,8 +301,7 @@ Function Get-CRMSolution
 }
 
 
-Function Set-CRMSDKStepState
-{
+function Set-CRMSDKStepState {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory=$true)]
@@ -365,21 +337,17 @@ Function Set-CRMSDKStepState
 </fetch>
 "@
 
-    if ($Include -ne [string]::Empty)
-    {
+    if ($Include -ne [string]::Empty) {
         $includeCondition = "<condition attribute=`"name`" operator=`"like`" value=`"$Include`" />"
     }
-    else
-    {
+    else {
         $includeCondition = [string]::Empty
     }
 
-    if ($Exclude -ne [string]::Empty)
-    {
+    if ($Exclude -ne [string]::Empty) {
         $excludeCondition = "<condition attribute=`"name`" operator=`"not-like`" value=`"$Exclude`" />"
     }
-    else
-    {
+    else {
         $excludeCondition = [string]::Empty
     }
 
@@ -388,8 +356,7 @@ Function Set-CRMSDKStepState
 
     $steps = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXml -f $SolutionId, $includeCondition, $excludeCondition)
 
-    if (($null -eq $steps) -or ($steps.Count -eq 0))
-    {
+    if (($null -eq $steps) -or ($steps.Count -eq 0)) {
         Write-Warning -Message "Found nothing to update"
         return
     }
@@ -397,15 +364,12 @@ Function Set-CRMSDKStepState
     Write-Verbose -Message "Found $($steps.Count) steps"
     Write-Verbose -Message "Updating them"
 
-    switch ($State)
-    {
-        'Enabled'
-        {
+    switch ($State) {
+        'Enabled' {
             $response = Set-CRMState -Connection $Connection -Entity $steps -State 0 -Status 1
         }
 
-        'Disabled'
-        {
+        'Disabled' {
             $response = Set-CRMState -Connection $Connection -Entity $steps -State 1 -Status 2
         }
     }
@@ -414,8 +378,7 @@ Function Set-CRMSDKStepState
 }
 
 
-Function Get-CRMBusinessUnit
-{
+function Get-CRMBusinessUnit {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory=$true)]
@@ -442,8 +405,7 @@ Function Get-CRMBusinessUnit
 }
 
 
-Function New-CRMBusinessUnit
-{
+function New-CRMBusinessUnit {
     [CmdletBinding()]
     [OutputType([System.Guid])]
     Param(
@@ -458,8 +420,7 @@ Function New-CRMBusinessUnit
         [guid]$ParentBusinessUnitId = [guid]::Empty
     )
 
-    if ($ParentBusinessUnitId -eq [guid]::Empty)
-    {
+    if ($ParentBusinessUnitId -eq [guid]::Empty) {
         Write-Verbose -Message "Getting root BU"
 
         $fetchXml = @"
@@ -489,8 +450,7 @@ Function New-CRMBusinessUnit
 }
 
 
-Function New-CRMUser
-{
+function New-CRMUser {
     [CmdletBinding()]
     [OutputType([System.Guid])]
     Param(
@@ -534,8 +494,7 @@ Function New-CRMUser
 }
 
 
-Function Get-CRMDuplicateRule
-{
+function Get-CRMDuplicateRule {
     [CmdletBinding()]
     [OutputType([Microsoft.Xrm.Sdk.Entity])]
     Param(
@@ -572,8 +531,8 @@ Function Get-CRMDuplicateRule
     $duplicateRule
 }
 
-Function New-CRMQueue
-{
+
+function New-CRMQueue {
     [CmdletBinding()]
     [OutputType([System.Guid])]
     Param(
@@ -598,8 +557,7 @@ Function New-CRMQueue
     $queueAttributes['ownerid'] = Get-CRMEntityReference -EntityName 'systemuser' -Id $OwnerId
     $queueAttributes['outgoingemaildeliverymethod'] = Get-CRMOptionSetValue -Value 2 # Email Router
 
-    if ($Email -ne [string]::Empty)
-    {
+    if ($Email -ne [string]::Empty) {
         $queueAttributes['emailaddress'] = $Email
     }
 
@@ -607,8 +565,7 @@ Function New-CRMQueue
 
     $queueId = $resp.Responses[0].Response.id
 
-    if ($Email -ne [string]::Empty)
-    {
+    if ($Email -ne [string]::Empty) {
         $queueEntity = Get-CRMEntityById -Connection $Connection -EntityName 'queue' -Id $queueId -Columns 'emailrouteraccessapproval'
         $queueEntity['emailrouteraccessapproval'] = Get-CRMOptionSetValue -Value 1 # Approved
         $resp = Update-CRMEntity -Connection $Connection -Entity $queueEntity
@@ -618,8 +575,8 @@ Function New-CRMQueue
     $queueId
 }
 
-Function Set-CRMQueueForUser
-{
+
+function Set-CRMQueueForUser {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory=$true)]
@@ -644,8 +601,7 @@ Function Set-CRMQueueForUser
 }
 
 
-Function Add-CRMRoleForUser
-{
+function Add-CRMRoleForUser {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory=$true)]
@@ -674,8 +630,7 @@ Function Add-CRMRoleForUser
 
     $role = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXml -f $RoleName, $User['businessunitid'].Id) | Select-Object -Index 0
 
-    if ($null -eq $role)
-    {
+    if ($null -eq $role) {
         throw "Couldn't find role $($RoleName) or something went wrong."
     }
 
@@ -684,8 +639,8 @@ Function Add-CRMRoleForUser
     Add-CRMAssociation -Connection $Connection -EntityName $User.LogicalName -Id $User.Id -Relationship 'systemuserroles_association' -RelatedEntity $reference
 }
 
-Function Remove-CRMRoleForUser
-{
+
+function Remove-CRMRoleForUser {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory=$true)]
@@ -714,8 +669,7 @@ Function Remove-CRMRoleForUser
 
     $role = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXml -f $RoleName, $User['businessunitid'].Id) | Select-Object -Index 0
 
-    if ($null -eq $role)
-    {
+    if ($null -eq $role) {
         throw "Couldn't find role $($RoleName) or something went wrong."
     }
 
@@ -764,8 +718,8 @@ $currencyInfo = @{
     }
 }
 
-Function Get-CRMTransactionCurrency
-{
+
+function Get-CRMTransactionCurrency {
     [CmdletBinding()]
     [OutputType([Microsoft.Xrm.Sdk.Entity])]
     Param(
@@ -792,8 +746,8 @@ Function Get-CRMTransactionCurrency
     $tc
 }
 
-Function New-CRMTransactionCurrency
-{
+
+function New-CRMTransactionCurrency {
     [CmdletBinding()]
     [OutputType([System.Guid])]
     Param(
@@ -823,8 +777,8 @@ Function New-CRMTransactionCurrency
     $resp.Responses[0].Response.id
 }
 
-Function Set-CRMSDKStepMode
-{
+
+function Set-CRMSDKStepMode {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory=$true)]
@@ -845,16 +799,14 @@ Function Set-CRMSDKStepMode
     # Sync - 0, Async - 1
     # Yes - 1, No - 0
 
-    switch ($Mode)
-    {
-        'Asynchronous'
-        {
+    switch ($Mode) {
+        'Asynchronous' {
             $step['mode'] = Get-CRMOptionSetValue -Value 1
             $step['asyncautodelete'] = $SetAutoDelete.IsPresent
             break
         }
-        'Synchronous'
-        {
+
+        'Synchronous' {
             $step['mode'] = Get-CRMOptionSetValue -Value 0
             $step['asyncautodelete'] = $false
             break
@@ -866,8 +818,7 @@ Function Set-CRMSDKStepMode
 }
 
 
-Function Enable-CRMWorkflow
-{
+function Enable-CRMWorkflow {
     <#
     .SYNOPSIS
     Activates workflow.
@@ -901,10 +852,8 @@ Function Enable-CRMWorkflow
     )
 
 
-    switch ($PSCmdlet.ParameterSetName)
-    {
-        'Id'
-        {
+    switch ($PSCmdlet.ParameterSetName) {
+        'Id' {
             $fetchXmlWorkflow = @"
 <fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">
   <entity name="workflow">
@@ -918,22 +867,19 @@ Function Enable-CRMWorkflow
 
             $workflows  = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXmlWorkflow -f $Id)
 
-            if ($workflows.Count -gt 0)
-            {
+            if ($workflows.Count -gt 0) {
                 Write-Verbose -Message "Found $($workflows.Count) workflows with Id '$Id'"
 
                 $response = Set-CRMState -Connection $Connection -Entity $workflows -State 1 -Status 2 -ContinueOnError
 
                 $response | Assert-CRMOrganizationResponse
             }
-            else
-            {
+            else {
                 Write-Verbose -Message "No workflows with Id '$Id' were found"
             }
         }
 
-        'Name'
-        {
+        'Name' {
             $fetchXmlWorkflow = @"
 <fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">
   <entity name="workflow">
@@ -947,16 +893,14 @@ Function Enable-CRMWorkflow
 
             $workflows  = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXmlWorkflow -f $Name)
 
-            if ($workflows.Count -gt 0)
-            {
+            if ($workflows.Count -gt 0) {
                 Write-Verbose -Message "Found $($workflows.Count) workflows with name '$Name'"
 
                 $response = Set-CRMState -Connection $Connection -Entity $workflows -State 1 -Status 2 -ContinueOnError
 
                 $response | Assert-CRMOrganizationResponse
             }
-            else
-            {
+            else {
                 Write-Verbose -Message "No workflows with name '$Name' were found"
             }
         }
@@ -984,8 +928,7 @@ Function Enable-CRMWorkflow
 
                 $response | Assert-CRMOrganizationResponse
             }
-            else
-            {
+            else {
                 Write-Verbose -Message "No workflows in solution with Id '$SolutionId' were found"
             }
         }
@@ -993,8 +936,7 @@ Function Enable-CRMWorkflow
 }
 
 
-Function Disable-CRMWorkflow
-{
+function Disable-CRMWorkflow {
     <#
     .SYNOPSIS
     Deactivates workflow.
@@ -1028,16 +970,14 @@ Function Disable-CRMWorkflow
 
     $workflows  = Get-CRMEntity -Connection $Connection -FetchXml ($fetchXmlWorkflow -f $Name)
 
-    if ($workflows.Count -gt 0)
-    {
+    if ($workflows.Count -gt 0) {
         Write-Verbose -Message "Found $($workflows.Count) workflows with name '$Name'"
 
         $response = Set-CRMState -Connection $Connection -Entity $workflows -State 0 -Status 1 -ContinueOnError
 
         $response | Assert-CRMOrganizationResponse
     }
-    else
-    {
+    else {
         Write-Verbose -Message "No workflows with name '$Name' were found"
         # Or throw?
     }
