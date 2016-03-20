@@ -53,6 +53,7 @@ function Get-CRMEntityMetadata {
         [Microsoft.Xrm.Client.CrmConnection]$Connection,
 
         [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
         [string]$LogicalName
     )
 
@@ -385,6 +386,7 @@ function Get-CRMBusinessUnit {
         [Microsoft.Xrm.Client.CrmConnection]$Connection,
 
         [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
         [string]$Name
     )
 
@@ -413,10 +415,11 @@ function New-CRMBusinessUnit {
         [Microsoft.Xrm.Client.CrmConnection]$Connection,
 
         [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
         [string]$Name,
 
         [Parameter(Mandatory=$false)]
-        [ValidateNotNullOrEmpty()]
+        [ValidateNotNull()]
         [guid]$ParentBusinessUnitId = [guid]::Empty
     )
 
@@ -905,8 +908,7 @@ function Enable-CRMWorkflow {
             }
         }
 
-        'SolutionId'
-        {
+        'SolutionId' {
             $fetchXmlWorkflow = @"
 <fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">
   <entity name="workflow">
@@ -954,6 +956,7 @@ function Disable-CRMWorkflow {
         [Microsoft.Xrm.Client.CrmConnection]$Connection,
 
         [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
         [string]$Name
     )
 
